@@ -5,12 +5,24 @@ require 'open-uri'
 
 Struct.new("Fin_period", :date, :open, :high, :low, :close, :volume, :adj_close)
 
+def write_data_set_to_file(dataset, path)
+	f = File.new(path, "w")
+	dataset.each do |elem|
+				 f.puts "#{elem[:date]}, #{elem[:open]}, #{elem[:high]}, #{elem[:low]}, #{elem[:close]}, #{elem[:volume]}, #{elem[:adj_close]}"
+	end
+	f.close
+end
+
 def make_data_set(raw_data)
 	lines = raw_data.each_line
 	data_set = Array.new
 	lines.each do |line|
 			   tmp = line.split(",")
-			   data_set.push(Struct::Fin_period.new(tmp[0], tmp[1].to_f, tmp[2].to_f, tmp[3].to_f, tmp[4].to_f, tmp[5].to_f, tmp[6].to_f))
+			   if tmp[0] == "Date"
+			   	  	data_set.push(Struct::Fin_period.new(tmp[0], tmp[1], tmp[2], tmp[3], tmp[4], tmp[5], tmp[6]))
+			   else
+					data_set.push(Struct::Fin_period.new(tmp[0], tmp[1].to_f, tmp[2].to_f, tmp[3].to_f, tmp[4].to_f, tmp[5].to_f, tmp[6].to_f))
+			   end
 	end
 	data_set.sort {|x, y| y[:date] <=> x[:date]}
 	return data_set
@@ -91,6 +103,7 @@ elsif ans == "2"
 	   puts "#{data}"
 	   data_set = make_data_set(data)
 	   puts_data_set(data_set)
+	   write_data_set_to_file(data_set, "./testfile")
 	end
 end
 end
