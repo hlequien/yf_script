@@ -44,7 +44,11 @@ def data_set_mov_avg(dataset, period)
 	sum = 0.0
 	i = 0
 	while dataset[i] != nil and i < period
-		  sum += dataset[i][:close]
+		  if dataset[i][:close] == "Close"
+		  	 period += 1
+		  else
+			 sum += dataset[i][:close]
+			end
 		  i += 1
 	end
 return sum / period
@@ -103,6 +107,7 @@ elsif ans == "2"
 	   puts "#{data}"
 	   data_set = make_data_set(data)
 	   puts_data_set(data_set)
+	   puts data_set_mov_avg(data_set, 20)
 	   write_data_set_to_file(data_set, "./testfile")
 	end
 end
