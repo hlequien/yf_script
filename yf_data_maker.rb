@@ -26,9 +26,11 @@ def get_csv_data_from_file(path)
     return nil
   end
   data = Array.new
-  text.each_line.each do |line|
-    tmp = line.split(",")
-    data.push(Struct::Ohlc_data.new(tmp[0].strip, tmp[1].strip.to_f, tmp[2].strip.to_f, tmp[3].strip.to_f, tmp[4].strip.to_f, nil))
+  text.each_line.each_with_index do |line, i|
+    if i > 0
+      tmp = line.split(",")
+      data.push(Struct::Ohlc_data.new(tmp[0].strip, tmp[1].strip.to_f, tmp[2].strip.to_f, tmp[3].strip.to_f, tmp[4].strip.to_f, nil))
+    end
   end
   data.sort {|a, b| a[:date] <=> b[:date]}
   return data
@@ -43,8 +45,7 @@ def add_data_mov_avg(data, period)
   if data == nil or period == 0
     return nil
   end
-  i = 0
-  data.each do |d|
+  data.each_with_index do |d, i|
     avg = 0.0
     if (i >= period)
       j = 0
@@ -58,6 +59,5 @@ def add_data_mov_avg(data, period)
       d:analysis = Array.new
     end
     d:analysis.push(avg)
-    i += 1
   end
 end
