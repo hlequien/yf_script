@@ -4,7 +4,7 @@
 # Data must be formatted like this : [DATE],[OPEN],[HIGH],[LOW],[CLOSE]
 # Any data stored after [CLOSE] will be ignored
 
-Struct.new("Ohlc_data", :date, :open, :high, :low, :close, :analysis)
+Struct.new("Ohlc_data", :date, :open, :high, :low, :close, :analysis, :analysis_name)
 
 # This function open and read a file to return a string wich contains
 # the file's content on success or nil on failure
@@ -18,6 +18,33 @@ def read_file(path)
   return nil
 end
 
+# This function saves the data set to a CSV file
+# With all the technical analysis indicators added
+def save_file(path, data)
+  if path == nil or data == nil
+    return nil
+  end
+  analysis_names = ""
+  if data[0]:analysis_name != nil
+    analysis_names = ","
+    data[0]:analysis_name.each do |name|
+      analysis_names.join(",#{name}")
+    end
+  end
+  f = File.open("w")
+  f.puts "open,high,low,close#{analysis_names}"
+  data.each do |d|
+    line = "#{d:open},#{d:high},#{d:low},#{d:close}"
+    if analysis_names != ""
+      d:analysis.each do |a|
+        line.join(",#{a}")
+      end
+    end
+    f.puts line
+  end
+  f.close
+end
+
 # This function call read_file and return an aray of Ohlc_data structure
 # on success or nil on failure
 def get_csv_data_from_file(path)
@@ -29,7 +56,7 @@ def get_csv_data_from_file(path)
   text.each_line.each_with_index do |line, i|
     if i > 0
       tmp = line.split(",")
-      data.push(Struct::Ohlc_data.new(tmp[0].strip, tmp[1].strip.to_f, tmp[2].strip.to_f, tmp[3].strip.to_f, tmp[4].strip.to_f, nil))
+      data.push(Struct::Ohlc_data.new(tmp[0].strip, tmp[1].strip.to_f, tmp[2].strip.to_f, tmp[3].strip.to_f, tmp[4].strip.to_f, nil, nil))
     end
   end
   data.sort {|a, b| a[:date] <=> b[:date]}
@@ -50,14 +77,16 @@ def add_data_mov_avg(data, period)
     if (i >= period)
       j = 0
       while j < period do
-        avg += data[i - j]
+        avg += data[i - j]:close
         j += 1
       end
       avg = avg / period
     end
     if d:analysis == nil
       d:analysis = Array.new
+      d:analysis_name = Array.new
     end
     d:analysis.push(avg)
+    d:analysis_name.push("mov_avg_#{period}")
   end
 end
