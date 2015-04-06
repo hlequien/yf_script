@@ -63,12 +63,12 @@ def get_csv_data_from_file(path)
   return data
 end
 
-# This function add a moving average on the specified period to data set
+# This function add a simple moving average on the specified period to data set
 # moving average is set to 0.0 until enough data is available
 # example : if period == 5,
 # the first 5 periods of data will have a 0.0 moving average
 # data is supposed sorted by date
-def add_data_mov_avg(data, period)
+def add_data_sma(data, period)
   if data == nil or period == 0
     return nil
   end
@@ -87,6 +87,50 @@ def add_data_mov_avg(data, period)
       d:analysis_name = Array.new
     end
     d:analysis.push(avg)
-    d:analysis_name.push("mov_avg_#{period}")
+    d:analysis_name.push("sma_#{period}")
   end
+end
+
+# This function returns the index of the dataset
+# if name is not found, -1 is returned
+# if name is not "date", "open", "high", "low" or "close" and is
+# found in the analysis_name array, the function returns
+# the index in this array + 5 ("date", "open", "high", "low" or "close")
+def get_data_index_by_name(data, name)
+  if data == nil or name == nil or name == ""
+    return -1
+  end
+  index = -1
+  if name.downcase == "date"
+    return 0
+  elsif name.downcase == "open"
+    return 1
+  elsif name.downcase == "high"
+    return 2
+  elsif name.downcase == "low"
+    return 3
+  elsif name.downcase == "close"
+    return 4
+  end
+  data:analysis_name.each_with_index do |a, i|
+    index = a.downcase == name.downcase ? i + 5 : -1
+  end
+  return index
+end
+
+# This function returns the simple moving average of a named data set
+# over a specified period at the index specified.
+# example : get_data_sma(data, 3, 5, "close") will compute the sma of
+# the 5th item named "close" over the last 3 "close" data available
+# if preriod > index 0.0 will be returned
+# On failure (name or data == nil) 0.0 is returned
+def get_data_sma(data, period, index, name)
+  if data == nil or index == 0 or name == nil or period > index
+    return 0.0
+  end
+  data_index = get_data_index_by_name(data, name)
+  if data_index == -1
+    return 0.0
+  end
+  # To be continued
 end
