@@ -1,5 +1,5 @@
 #!/usr/bin/ruby
-# This module is supposed to get the hitorical data of a seurity
+# This module is supposed to get the hitorical data of a security
 # from a CSV.
 # Data must be formatted like this : [DATE],[OPEN],[HIGH],[LOW],[CLOSE]
 # Any data stored after [CLOSE] will be ignored
@@ -129,8 +129,14 @@ def get_data_sma(data, period, index, name)
     return 0.0
   end
   data_index = get_data_index_by_name(data, name)
-  if data_index == -1
+  if data_index < 1
     return 0.0
   end
-  # To be continued
+  j = 0
+  avg = 0
+  while period > j
+    avg += (data_index > 5) ? data[index - j][5][data_index] : data[index - j][data_index]
+    j += 1
+  end
+  return avg / period
 end
