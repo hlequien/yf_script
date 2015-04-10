@@ -139,7 +139,7 @@ def get_data_sma(data, period, index, name)
   j = 0
   avg = 0.0
   while period > j
-    avg += (data_index > 5) ? data[index - j][5][data_index] : data[index - j][data_index]
+    avg += (data_index > 5) ? data[index - j][5][data_index - 5] : data[index - j][data_index]
     j += 1
   end
   return avg / period
@@ -156,14 +156,14 @@ def get_data_variance(data, period, index, name)
   avg = 0.0
   j = 0
   while j < period
-    avg += (data_index > 5) ? data[index - j][5][data_index] : data[index - j][data_index]
+    avg += (data_index > 5) ? data[index - j][5][data_index - 5] : data[index - j][data_index]
     j += 1
   end
   avg = avg / period
   j = 0
   sum = 0.0
   while j < period
-    res = (data_index > 5) ? data[index - j][5][data_index] : data[index - j][data_index]
+    res = (data_index > 5) ? data[index - j][5][data_index - 5] : data[index - j][data_index]
     res = res - avg
     res = res * res
     sum += res
@@ -180,5 +180,30 @@ def get_data_standard_deviation(data, period, index, name)
   if data_index < 1
     return 0.0
   end
-# To be continued
+  var = get_data_variance(data, period, index, name)
+  if var == nil
+    return nil
+  end
+  return Math.sqrt(var)
+end
+
+# This this function compute and returns the exponential moving average of
+# the specified element, over the period specified and at the index specified
+def get_data_ema(data, period, index, name)
+  if data == nil or index == 0 or name == nil or period > index
+    return 0.0
+  end
+  data_index = get_data_index_by_name(data, name)
+  if data_index < 1
+    return 0.0
+  end
+  if period == 0
+    return get_data_sma(data, index, index, name)
+  else
+    data_index = get_data_index_by_name(data, name)
+    t_price = (data_index > 5) ? data[index][5][data_index - 5] : data[index][data_index]
+    y_ema = get_data_ema(data, period - 1, index - 1, name)
+    t_ema = y_ema + ((2 / (period + 1)) * (t_price - y_ema))
+    return t_ema
+  end
 end
