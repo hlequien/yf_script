@@ -1,8 +1,20 @@
 #!/usr/bin/ruby
-# This module is supposed to get the hitorical data of a security
+# This script is supposed to get the hitorical data of a security
 # from a CSV.
 # Data must be formatted like this : [DATE],[OPEN],[HIGH],[LOW],[CLOSE]
 # Any data stored after [CLOSE] will be ignored
+# Some technical indicators needs multiple columns, example : bollinger bands 20, 2
+# needs 3 columns : boll_sma_20, boll_20_2_up and boll_20_2_down
+# Indicators which needs multiples columns use all the columns they need to work
+# The purpose of this script is to edit data for further use by another software
+# wich is not able to do these edits (Excel, what a shame, can't make an exponential moving average)
+# NB : data won't be duplicated if they already exists and already existing data will be used
+# to compute advanced indicators, example :
+# you already have a simple moving average over 20 periods (sma_20) and you want to add
+# bollinger bands over 20 periods and a standard deviation multiplier of 2 (boll_bands(20,2))
+# the script will use the already existing sma_20 and won't compute a special one for the boll_bands
+# Ruby is not that fast, so I try to avoid unnecessary memory operations wich are slowing down
+# the process even in faster languages like C.
 
 Struct.new("Ohlc_data", :date, :open, :high, :low, :close, :analysis, :analysis_name)
 
@@ -73,15 +85,7 @@ def add_data_sma(data, period)
     return nil
   end
   data.each_with_index do |d, i|
-    avg = 0.0
-    if (i >= period)
-      j = 0
-      while j < period do
-        avg += data[i - j]:close
-        j += 1
-      end
-      avg = avg / period
-    end
+    avg = get_data_sma(data, period, i, "close")
     if d:analysis == nil
       d:analysis = Array.new
       d:analysis_name = Array.new
@@ -133,10 +137,48 @@ def get_data_sma(data, period, index, name)
     return 0.0
   end
   j = 0
-  avg = 0
+  avg = 0.0
   while period > j
     avg += (data_index > 5) ? data[index - j][5][data_index] : data[index - j][data_index]
     j += 1
   end
   return avg / period
+end
+
+def get_data_variance(data, period, index, name)
+  if data == nil or index == 0 or name == nil or period > index
+    return 0.0
+  end
+  data_index = get_data_index_by_name(data, name)
+  if data_index < 1
+    return 0.0
+  end
+  avg = 0.0
+  j = 0
+  while j < period
+    avg += (data_index > 5) ? data[index - j][5][data_index] : data[index - j][data_index]
+    j += 1
+  end
+  avg = avg / period
+  j = 0
+  sum = 0.0
+  while j < period
+    res = (data_index > 5) ? data[index - j][5][data_index] : data[index - j][data_index]
+    res = res - avg
+    res = res * res
+    sum += res
+    j += 1
+  end
+  return res / (period - 1)
+end
+
+def get_data_standard_deviation(data, period, index, name)
+  if data == nil or index == 0 or name == nil or period > index
+    return 0.0
+  end
+  data_index = get_data_index_by_name(data, name)
+  if data_index < 1
+    return 0.0
+  end
+# To be continued
 end
