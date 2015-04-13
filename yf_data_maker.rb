@@ -129,7 +129,7 @@ end
 # if preriod > index 0.0 will be returned
 # On failure (name or data == nil) 0.0 is returned
 def get_data_sma(data, period, index, name)
-  if data == nil or index == 0 or name == nil or period > index
+  if data == nil or name == nil or period > index
     return 0.0
   end
   data_index = get_data_index_by_name(data, name)
@@ -197,13 +197,104 @@ def get_data_ema(data, period, index, name)
   if data_index < 1
     return 0.0
   end
-  if period == 0
-    return get_data_sma(data, index, index, name)
+  if period == index
+    return get_data_sma(data, period, index, name)
   else
     data_index = get_data_index_by_name(data, name)
     t_price = (data_index > 5) ? data[index][5][data_index - 5] : data[index][data_index]
-    y_ema = get_data_ema(data, period - 1, index - 1, name)
+    y_ema = get_data_ema(data, period, index - 1, name)
     t_ema = y_ema + ((2 / (period + 1)) * (t_price - y_ema))
     return t_ema
   end
+end
+
+# This exponential moving average is only used in RSI calculation because the "real EMA"
+# use all the data and the RSI needs all the up and all the down over N days
+# This function's data is an array of all up or all down over the period
+def get_data_ema_rsi(data, index)
+  if data == nil or index < 0 or data.count == 0
+    return 0.0
+  end
+  if index == data.count - 1
+    return data[0]
+  end
+  alpha = 2 / (1 + data.count)
+  y_ema = get_data_ema_rsi(data, index - 1)
+  return data[index] * alpha + y_ema * (1 - alpha)
+end
+
+def get_data_rsi(data, period, index, name)
+  if data == nil or index == 0 or name == nil or period > index
+    return 0.0
+  end
+  data_index = get_data_index_by_name(data, name)
+  if data_index < 1
+    return 0.0
+  end
+  ups = Array.new
+  downs = Array.new
+  i = 0
+  while i < period
+    t_data = (data_index > 5 ? data[index - i][5][data_index - 5] : data[index - i][5][data_index])
+    y_data = (data_index > 5 ? data[index - i - 1][5][data_index - 5] : data[index - i - 1][5][data_index])
+    diff = t_data - y_data
+    if diff < 0
+      down.push diff.abs
+    else
+      ups.push diff
+    end
+  end
+  ema_ups = get_data_ema_rsi(ups, 0)
+  ema_downs = get_data_ema_rsi(downs, 0)
+  return ((ema_ups / (ema_ups + ema_downs)) * 100)
+end
+
+# This function returns the mininum value of name data range
+# from start to stop wich are both included
+def get_data_min(data, start, stop, name)
+  if data == nil or start < 0 or stop < 0 or name == nil
+    return 0.0
+  end
+  data_index = get_data_index_by_name(data, name)
+  if data_index < 1
+    return 0.0
+  end
+  if start > stop
+    tmp = start
+    start = stop
+    stop = tmp
+  end
+  min = (data_index > 5 ? data[start][5][data_index - 5] : data[start][5][data_index])
+  i = start
+  while i <= stop
+    if (data_index > 5 ? data[i][5][data_index - 5] : data[i][5][data_index]) < min
+      min = (data_index > 5 ? data[i][5][data_index - 5] : data[i][5][data_index])
+    end
+    i += 1
+  end
+  return min
+end
+
+def get_data_max(data, start, stop, name)
+  if data == nil or start < 0 or stop < 0 or name == nil
+    return 0.0
+  end
+  data_index = get_data_index_by_name(data, name)
+  if data_index < 1
+    return 0.0
+  end
+  if start > stop
+    tmp = start
+    start = stop
+    stop = tmp
+  end
+  max = (data_index > 5 ? data[start][5][data_index - 5] : data[start][5][data_index])
+  i = start
+  while i <= stop
+    if (data_index > 5 ? data[i][5][data_index - 5] : data[i][5][data_index]) > max
+      max = (data_index > 5 ? data[i][5][data_index - 5] : data[i][5][data_index])
+    end
+    i += 1
+  end
+  return max
 end
