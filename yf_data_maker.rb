@@ -300,6 +300,7 @@ def get_data_max(data, start, stop, name)
 end
 
 # This function returns the %K of a stochastic
+# To get the %D of a stochastic, just do an sma (usually on 3 periods) on the %D data range
 def get_data_stochastic_k(data, index, period, name)
   if data == nil or index == 0 or period == 0 or name == nil or period > index
     return 0.0
@@ -312,4 +313,17 @@ def get_data_stochastic_k(data, index, period, name)
   h = get_data_max(data, index, index - period, name)
   b = get_data_min(data, index, index - period, name)
   return (100 * (price - b) / (h - b))
+end
+
+# This function returns the Williams %K of data over a period
+# NB : Williams %K is always equal to 100 - stochastic's %K over the same period
+def get_data_williams_r(data, index, period, name)
+  if data == nil or index == 0 or period == 0 or name == nil or period > index
+    return 0.0
+  end
+  data_index = get_data_index_by_name(data, name)
+  if data_index < 1
+    return (0.0)
+  end
+  return (100 - get_data_stochastic_k(data, index, period, name))
 end
