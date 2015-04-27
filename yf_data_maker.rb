@@ -298,3 +298,18 @@ def get_data_max(data, start, stop, name)
   end
   return max
 end
+
+# This function returns the %K of a stochastic
+def get_data_stochastic_k(data, index, period, name)
+  if data == nil or index == 0 or period == 0 or name == nil or period > index
+    return 0.0
+  end
+  data_index = get_data_index_by_name(data, name)
+  if data_index < 1
+    return (0.0)
+  end
+  price = data_index > 5 ? data[i][5][data_index - 5] : data[i][5][data_index]
+  h = get_data_max(data, index, index - period, name)
+  b = get_data_min(data, index, index - period, name)
+  return (100 * (price - b) / (h - b))
+end
