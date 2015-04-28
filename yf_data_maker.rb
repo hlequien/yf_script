@@ -37,19 +37,19 @@ def save_file(path, data)
     return nil
   end
   analysis_names = ""
-  if data[0]:analysis_name != nil
+  if data[0][:analysis_name] != nil
     analysis_names = ","
-    data[0]:analysis_name.each do |name|
-      analysis_names.join(",#{name}")
+    data[0][:analysis_name].each do |name|
+      analysis_names << ",#{name}"
     end
   end
-  f = File.open("w")
-  f.puts "open,high,low,close#{analysis_names}"
+  f = File.open(path.strip, "w")
+  f.puts "date,open,high,low,close,#{analysis_names}"
   data.each do |d|
-    line = "#{d:open},#{d:high},#{d:low},#{d:close}"
+    line = "#{d[:date]},#{d[:open]},#{d[:high]},#{d[:low]},#{d[:close]}"
     if analysis_names != ""
-      d:analysis.each do |a|
-        line.join(",#{a}")
+      d[:analysis].each do |a|
+        line << ",#{a}"
       end
     end
     f.puts line
@@ -96,7 +96,7 @@ def get_data_index_by_name(data, name)
   elsif name.downcase == "close"
     return 4
   end
-  data:analysis_name.each_with_index do |a, i|
+  data[:analysis_name].each_with_index do |a, i|
     index = a.downcase == name.downcase ? i + 5 : -1
   end
   return index
@@ -339,12 +339,12 @@ def add_data_sma(data, period)
   end
   data.each_with_index do |d, i|
     avg = get_data_sma(data, i, period, "close")
-    if d:analysis == nil
-      d:analysis = Array.new
-      d:analysis_name = Array.new
+    if d[:analysis] == nil
+      d[:analysis] = Array.new
+      d[:analysis_name] = Array.new
     end
-    d:analysis.push(avg)
-    d:analysis_name.push("sma_#{period}")
+    d[:analysis].push(avg)
+    d[:analysis_name].push("sma_#{period}")
   end
 end
 
@@ -354,12 +354,12 @@ def add_data_rsi(data, period)
   end
   data.each_with_index do |d, i|
     rsi = get_data_rsi(data, i, period, "close")
-    if d:analysis == nil
-      d:analysis = Array.new
-      d:analysis_name = Array.new
+    if d[:analysis] == nil
+      d[:analysis] = Array.new
+      d[:analysis_name] = Array.new
     end
-    d:analysis.push(rsi)
-    d:analysis_name.push("rsi_#{period}")
+    d[:analysis].push(rsi)
+    d[:analysis_name].push("rsi_#{period}")
   end
 end
 
@@ -369,12 +369,12 @@ def add_data_stochastic_k(data, period)
   end
   data.each_with_index do |d, i|
     stoch = get_data_stochastic_k(data, i, period, "close")
-    if d:analysis == nil
-      d:analysis = Array.new
-      d:analysis_name = Array.new
+    if d[:analysis] == nil
+      d[:analysis] = Array.new
+      d[:analysis_name] = Array.new
     end
-    d:analysis.push(stoch)
-    d:analysis_name.push("stoch_k__#{period}")
+    d[:analysis].push(stoch)
+    d[:analysis_name].push("stoch_k__#{period}")
   end
 end
 
@@ -385,12 +385,12 @@ def add_data_stochastic_d(data, period, name)
   prev_period = name.split("_")[2]
   data.each_with_index do |d, i|
     d = get_data_sma(data, i, period, name)
-    if d:analysis == nil
-      d:analysis = Array.new
-      d:analysis_name = Array.new
+    if d[:analysis] == nil
+      d[:analysis] = Array.new
+      d[:analysis_name] = Array.new
     end
-    d:analysis.push(d)
-    d:analysis_name.push("stoch_#{prev_period}_d__#{period}")
+    d[:analysis].push(d)
+    d[:analysis_name].push("stoch_#{prev_period}_d__#{period}")
   end
 end
 
@@ -408,12 +408,12 @@ def add_data_williams_r(data, period)
   end
   data.each_with_index do |d, i|
     wr = get_data_williams_r(data, i, period, "close")
-    if d:analysis == nil
-      d:analysis = Array.new
-      d:analysis_name = Array.new
+    if d[:analysis] == nil
+      d[:analysis] = Array.new
+      d[:analysis_name] = Array.new
     end
-    d:analysis.push(wr)
-    d:analysis_name.push("williams_r__#{period}")
+    d[:analysis].push(wr)
+    d[:analysis_name].push("williams_r__#{period}")
   end
 end
 
@@ -423,12 +423,12 @@ def add_data_macd(data, period1, period2)
   end
   data.each_with_index do |d, i|
     macd = get_data_macd(data, i, period1, period2, "close")
-    if d:analysis == nil
-      d:analysis = Array.new
-      d:analysis_name = Array.new
+    if d[:analysis] == nil
+      d[:analysis] = Array.new
+      d[:analysis_name] = Array.new
     end
-    d:analysis.push(macd)
-    d:analysis_name.push("macd__#{period}")
+    d[:analysis].push(macd)
+    d[:analysis_name].push("macd__#{period}")
   end
 end
 
@@ -469,8 +469,10 @@ def data_maker_menu()
       add_data_williams_r(data, user_input.split(" ")[1].to_i)
     elsif user_input.match(/rsi [1-9][0-9]*/)
       add_data_macd(data, user_input.split(" ")[1].to_i, user_input.split(" ")[2].to_i)
-    elsif user_input == save
+    elsif user_input == "save"
       data_maker_menu_save(data)
     end
   end
 end
+
+data_maker_menu()
