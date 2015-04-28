@@ -432,7 +432,16 @@ def add_data_macd(data, period1, period2)
   end
 end
 
-def yf_data_maker_menu()
+def data_maker_menu_save(data)
+  if data == nil
+    return 0
+  end
+  puts("save in : ")
+  path = gets
+  save_file(path, data)
+end
+
+def data_maker_menu()
   data = nil
   while (data == nil)
     puts "Wich file do you want to open ?"
@@ -441,12 +450,27 @@ def yf_data_maker_menu()
   user_input = String.new
   while (user_input != "exit")
     puts "what what do you want to add ?"
-    puts "sma - Simple Moving Average"
+    puts "sma X - Simple Moving Average over X periods"
     #  puts "ema - Exponential Moving Average"
-    puts "rsi - Relative Strenght Index"
-    puts "stoch - Stochastic Oscillator"
-    puts "will - Williams %R"
-    puts "macd - Moving Average Convergence Divergence"
-    puts "exit - Exit script"
+    puts "rsi X - Relative Strenght Index over X periods"
+    puts "stoch X Y - Stochastic Oscillator %K over X periods, %D over Y periods"
+    puts "will  X - Williams %R over X periods"
+    puts "macd X Y - Moving Average Convergence Divergence over X and Y periods"
+    puts "save [name] - Save file, optional : filename"
+    puts "exit [!] - Exit script, optional : ! means no save prompt"
+    user_input = gets.strip
+    if user_input.match(/sma [1-9][0-9]*/)
+      add_data_sma(data, user_input.split(" ")[1].to_i)
+    elsif user_input.match(/rsi [1-9][0-9]*/)
+      add_data_rsi(data, user_input.split(" ")[1].to_i)
+    elsif user_input.match(/stoch [1-9][0-9]* [1-9][0-9]*/)
+      add_data_stochastic_all(data, user_input.split(" ")[1].to_i, user_input.split(" ")[2].to_i)
+    elsif user_input.match(/will [1-9][0-9]*/)
+      add_data_williams_r(data, user_input.split(" ")[1].to_i)
+    elsif user_input.match(/rsi [1-9][0-9]*/)
+      add_data_macd(data, user_input.split(" ")[1].to_i, user_input.split(" ")[2].to_i)
+    elsif user_input == save
+      data_maker_menu_save(data)
+    end
   end
 end
