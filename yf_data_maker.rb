@@ -75,26 +75,6 @@ def get_csv_data_from_file(path)
   return data
 end
 
-# This function add a simple moving average on the specified period to data set
-# moving average is set to 0.0 until enough data is available
-# example : if period == 5,
-# the first 5 periods of data will have a 0.0 moving average
-# data is supposed sorted by date
-def add_data_sma(data, period)
-  if data == nil or period == 0
-    return nil
-  end
-  data.each_with_index do |d, i|
-    avg = get_data_sma(data, period, i, "close")
-    if d:analysis == nil
-      d:analysis = Array.new
-      d:analysis_name = Array.new
-    end
-    d:analysis.push(avg)
-    d:analysis_name.push("sma_#{period}")
-  end
-end
-
 # This function returns the index of the dataset
 # if name is not found, -1 is returned
 # if name is not "date", "open", "high", "low" or "close" and is
@@ -128,7 +108,7 @@ end
 # the 5th item named "close" over the last 3 "close" data available
 # if preriod > index 0.0 will be returned
 # On failure (name or data == nil) 0.0 is returned
-def get_data_sma(data, period, index, name)
+def get_data_sma(data, index, period, name)
   if data == nil or name == nil or period > index
     return 0.0
   end
@@ -145,7 +125,7 @@ def get_data_sma(data, period, index, name)
   return avg / period
 end
 
-def get_data_variance(data, period, index, name)
+def get_data_variance(data, index, period, name)
   if data == nil or index == 0 or name == nil or period > index
     return 0.0
   end
@@ -172,7 +152,7 @@ def get_data_variance(data, period, index, name)
   return res / (period - 1)
 end
 
-def get_data_standard_deviation(data, period, index, name)
+def get_data_standard_deviation(data, index, period, name)
   if data == nil or index == 0 or name == nil or period > index
     return 0.0
   end
@@ -180,7 +160,7 @@ def get_data_standard_deviation(data, period, index, name)
   if data_index < 1
     return 0.0
   end
-  var = get_data_variance(data, period, index, name)
+  var = get_data_variance(data, index, period, name)
   if var == nil
     return nil
   end
@@ -189,7 +169,7 @@ end
 
 # This this function compute and returns the exponential moving average of
 # the specified element, over the period specified and at the index specified
-def get_data_ema(data, period, index, name)
+def get_data_ema(data, index, period, name)
   if data == nil or index == 0 or name == nil or period > index
     return 0.0
   end
@@ -198,11 +178,11 @@ def get_data_ema(data, period, index, name)
     return 0.0
   end
   if period == index
-    return get_data_sma(data, period, index, name)
+    return get_data_sma(data, index, period, name)
   else
     data_index = get_data_index_by_name(data, name)
     t_price = (data_index > 5) ? data[index][5][data_index - 5] : data[index][data_index]
-    y_ema = get_data_ema(data, period, index - 1, name)
+    y_ema = get_data_ema(data, index, period - 1, name)
     t_ema = y_ema + ((2 / (period + 1)) * (t_price - y_ema))
     return t_ema
   end
@@ -223,7 +203,7 @@ def get_data_ema_rsi(data, index)
   return data[index] * alpha + y_ema * (1 - alpha)
 end
 
-def get_data_rsi(data, period, index, name)
+def get_data_rsi(data, index, period, name)
   if data == nil or index == 0 or name == nil or period > index
     return 0.0
   end
@@ -326,4 +306,147 @@ def get_data_williams_r(data, index, period, name)
     return (0.0)
   end
   return (100 - get_data_stochastic_k(data, index, period, name))
+end
+
+# This function returns the MACD value of data over the specified periods (period1 and period2)
+# NB : This returns only the difference of the two EMAs, to get the EMAs value, run get_data_ema
+# Quick EMA is calculated using period1 and slow EMA using period2
+def get_data_macd(data, index, period1, period2, name)
+  if data == nil or index == 0 or period1 == 0 or period2 == 0 or name == nil or period1 > index or period2 > index
+    return 0.0
+  end
+  data_index = get_data_index_by_name(data, name)
+  if data_index < 1
+    return (0.0)
+  end
+  ema1 = get_data_ema(data, index, period1, name)
+  ema2 = get_data_ema(data, index, period2, name)
+  return (ema2 - ema1)
+end
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# The following part of the script is add functions' part
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+# This function add a simple moving average on the specified period to data set
+# moving average is set to 0.0 until enough data is available
+# example : if period == 5,
+# the first 5 periods of data will have a 0.0 moving average
+# data is supposed sorted by date
+def add_data_sma(data, period)
+  if data == nil or period == 0
+    return nil
+  end
+  data.each_with_index do |d, i|
+    avg = get_data_sma(data, i, period, "close")
+    if d:analysis == nil
+      d:analysis = Array.new
+      d:analysis_name = Array.new
+    end
+    d:analysis.push(avg)
+    d:analysis_name.push("sma_#{period}")
+  end
+end
+
+def add_data_rsi(data, period)
+  if data == nil or period == 0
+    return nil
+  end
+  data.each_with_index do |d, i|
+    rsi = get_data_rsi(data, i, period, "close")
+    if d:analysis == nil
+      d:analysis = Array.new
+      d:analysis_name = Array.new
+    end
+    d:analysis.push(rsi)
+    d:analysis_name.push("rsi_#{period}")
+  end
+end
+
+def add_data_stochastic_k(data, period)
+  if data == nil or period == 0
+    return nil
+  end
+  data.each_with_index do |d, i|
+    stoch = get_data_stochastic_k(data, i, period, "close")
+    if d:analysis == nil
+      d:analysis = Array.new
+      d:analysis_name = Array.new
+    end
+    d:analysis.push(stoch)
+    d:analysis_name.push("stoch_k__#{period}")
+  end
+end
+
+def add_data_stochastic_d(data, period, name)
+  if data == nil or period == 0
+    return nil
+  end
+  prev_period = name.split("_")[2]
+  data.each_with_index do |d, i|
+    d = get_data_sma(data, i, period, name)
+    if d:analysis == nil
+      d:analysis = Array.new
+      d:analysis_name = Array.new
+    end
+    d:analysis.push(d)
+    d:analysis_name.push("stoch_#{prev_period}_d__#{period}")
+  end
+end
+
+def add_data_stochastic_all(data, period1, period2)
+  if data == nil or period1 == 0 or period2 == 0
+    return nil
+  end
+  add_data_stochastic_k(data, period1)
+  add_data_stochastic_d(data, period2, "stoch_k_#{period1}")
+end
+
+def add_data_williams_r(data, period)
+  if data == nil or period == 0
+    return nil
+  end
+  data.each_with_index do |d, i|
+    wr = get_data_williams_r(data, i, period, "close")
+    if d:analysis == nil
+      d:analysis = Array.new
+      d:analysis_name = Array.new
+    end
+    d:analysis.push(wr)
+    d:analysis_name.push("williams_r__#{period}")
+  end
+end
+
+def add_data_macd(data, period1, period2)
+  if data == nil or period1 == 0 or period2 == 0
+    return nil
+  end
+  data.each_with_index do |d, i|
+    macd = get_data_macd(data, i, period1, period2, "close")
+    if d:analysis == nil
+      d:analysis = Array.new
+      d:analysis_name = Array.new
+    end
+    d:analysis.push(macd)
+    d:analysis_name.push("macd__#{period}")
+  end
+end
+
+def yf_data_maker_menu()
+  data = nil
+  while (data == nil)
+    puts "Wich file do you want to open ?"
+    data = get_csv_data_from_file(gets.strip)
+  end
+  user_input = String.new
+  while (user_input != "exit")
+    puts "what what do you want to add ?"
+    puts "sma - Simple Moving Average"
+    #  puts "ema - Exponential Moving Average"
+    puts "rsi - Relative Strenght Index"
+    puts "stoch - Stochastic Oscillator"
+    puts "will - Williams %R"
+    puts "macd - Moving Average Convergence Divergence"
+    puts "exit - Exit script"
+  end
 end
