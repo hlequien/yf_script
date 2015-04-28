@@ -1,5 +1,7 @@
 # yf_script
 
+A lot of people do "Hello World  !" to discover a language, some prefers doing financial data tools instead.
+
 ## I) What is yf_script
 
 yf is for Yahoo Finance and script because it's a script and I have a damn lack of immagination to find a name.
@@ -10,7 +12,7 @@ The final purpose is to make a script wich can be used to manage portfolio or fo
 ## II) Why yf_script
 
 Well, it's my first ruby script and to learn ruby, I wanted to do something I like and I need to make sure I go to through.
-And I used yahoo finance API because language you can use it with any language while this language can use a network.
+And I used yahoo finance API because you can use it with any language while this language can use a network.
 The documentation is pretty clear and the availability is close to 100%.
 I know it's delayed for most of stocks and you can't get historical intraday data but it's free of cost and registration.
 
