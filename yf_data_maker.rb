@@ -96,8 +96,9 @@ def get_data_index_by_name(data, name)
   elsif name.downcase == "close"
     return 4
   end
-  data[:analysis_name].each_with_index do |a, i|
-    index = a.downcase == name.downcase ? i + 5 : -1
+  puts "#{data.class}"
+  data[0][:analysis_name].each_with_index do |a, i|
+    index = a.downcase == name.downcase ? i + 5 : index
   end
   return index
 end
@@ -119,7 +120,7 @@ def get_data_sma(data, index, period, name)
   j = 0
   avg = 0.0
   while period > j
-    avg += (data_index > 5) ? data[index - j][5][data_index - 5] : data[index - j][data_index]
+    avg = (data_index > 5) ? data[index - j][5][data_index - 5] : data[index - j][data_index]
     j += 1
   end
   return avg / period
@@ -215,14 +216,15 @@ def get_data_rsi(data, index, period, name)
   downs = Array.new
   i = 0
   while i < period
-    t_data = (data_index > 5 ? data[index - i][5][data_index - 5] : data[index - i][5][data_index])
-    y_data = (data_index > 5 ? data[index - i - 1][5][data_index - 5] : data[index - i - 1][5][data_index])
+    t_data = (data_index > 5 ? data[index - i][5][data_index - 5] : data[index - i][data_index])
+    y_data = (data_index > 5 ? data[index - i - 1][5][data_index - 5] : data[index - i - 1][data_index])
     diff = t_data - y_data
     if diff < 0
-      down.push diff.abs
+      downs.push diff.abs
     else
       ups.push diff
     end
+    i += 1
   end
   ema_ups = get_data_ema_rsi(ups, 0)
   ema_downs = get_data_ema_rsi(downs, 0)
@@ -244,11 +246,11 @@ def get_data_min(data, start, stop, name)
     start = stop
     stop = tmp
   end
-  min = (data_index > 5 ? data[start][5][data_index - 5] : data[start][5][data_index])
+  min = (data_index > 5 ? data[start][5][data_index - 5] : data[start][data_index])
   i = start
   while i <= stop
-    if (data_index > 5 ? data[i][5][data_index - 5] : data[i][5][data_index]) < min
-      min = (data_index > 5 ? data[i][5][data_index - 5] : data[i][5][data_index])
+    if (data_index > 5 ? data[i][5][data_index - 5] : data[i][data_index]) < min
+      min = (data_index > 5 ? data[i][data_index - 5] : data[i][data_index])
     end
     i += 1
   end
@@ -268,11 +270,11 @@ def get_data_max(data, start, stop, name)
     start = stop
     stop = tmp
   end
-  max = (data_index > 5 ? data[start][5][data_index - 5] : data[start][5][data_index])
+  max = (data_index > 5 ? data[start][5][data_index - 5] : data[start][data_index])
   i = start
   while i <= stop
-    if (data_index > 5 ? data[i][5][data_index - 5] : data[i][5][data_index]) > max
-      max = (data_index > 5 ? data[i][5][data_index - 5] : data[i][5][data_index])
+    if (data_index > 5 ? data[i][5][data_index - 5] : data[i][data_index]) > max
+      max = (data_index > 5 ? data[i][5][data_index - 5] : data[i][data_index])
     end
     i += 1
   end
@@ -289,7 +291,7 @@ def get_data_stochastic_k(data, index, period, name)
   if data_index < 1
     return (0.0)
   end
-  price = data_index > 5 ? data[i][5][data_index - 5] : data[i][5][data_index]
+  price = data_index > 5 ? data[index][5][data_index - 5] : data[index][data_index]
   h = get_data_max(data, index, index - period, name)
   b = get_data_min(data, index, index - period, name)
   return (100 * (price - b) / (h - b))
@@ -374,7 +376,7 @@ def add_data_stochastic_k(data, period)
       d[:analysis_name] = Array.new
     end
     d[:analysis].push(stoch)
-    d[:analysis_name].push("stoch_k__#{period}")
+    d[:analysis_name].push("stoch_k_#{period}")
   end
 end
 
@@ -384,13 +386,8 @@ def add_data_stochastic_d(data, period, name)
   end
   prev_period = name.split("_")[2]
   data.each_with_index do |d, i|
-    d = get_data_sma(data, i, period, name)
-    if d[:analysis] == nil
-      d[:analysis] = Array.new
-      d[:analysis_name] = Array.new
-    end
-    d[:analysis].push(d)
-    d[:analysis_name].push("stoch_#{prev_period}_d__#{period}")
+    d[:analysis].push(get_data_sma(data, i, period, name))
+    d[:analysis_name].push("stoch_#{prev_period}_d_#{period}")
   end
 end
 
@@ -413,7 +410,7 @@ def add_data_williams_r(data, period)
       d[:analysis_name] = Array.new
     end
     d[:analysis].push(wr)
-    d[:analysis_name].push("williams_r__#{period}")
+    d[:analysis_name].push("williams_r_#{period}")
   end
 end
 
@@ -428,7 +425,7 @@ def add_data_macd(data, period1, period2)
       d[:analysis_name] = Array.new
     end
     d[:analysis].push(macd)
-    d[:analysis_name].push("macd__#{period}")
+    d[:analysis_name].push("macd_#{period}")
   end
 end
 
